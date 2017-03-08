@@ -1,4 +1,25 @@
 This file works through the basic principle behind Total Field Inversion (TFI)
 
+Paper source:
+Liu et al., Preconditioned Total Field Inversion (TFI) Method for Quantitative
+Susceptibility Mapping
+
+
 Use:
-TFI is used in MR image processing to optimize the picture.
+- TFI is used in QSM MR image processing to optimize the picture.
+- reduce systematic errors
+- traditional QSM has
+        -> background field removal
+        -> local field inversion (LFI)
+
+- improve QSM quality in presence of large susceptibility changes
+- brain, air-filled sinus, skull, fat
+
+Methods:
+- single optimization problem
+- simultaneously estimates
+        background fields
+        local fields
+    -> prevents error propagation from background field removal to QSM
+- uses new preconditioner to increase computational speed
+
