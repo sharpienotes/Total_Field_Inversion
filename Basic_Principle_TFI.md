@@ -58,7 +58,7 @@ Liu et al.: Preconditioned Total Field Inversion (TFI) Method for Quantitative S
 - regularization is used as local field  inversion (LFI)
 - errors in background field propagate to subsequential local field
 - here: use total field inversion (TFI)
-    * estimate \chi_B and \chi_L jointly
+    * estimate \\(\chi_B\\) and \chi_L jointly
     * their sum is the total susceptibility
 
 #### TFI:
