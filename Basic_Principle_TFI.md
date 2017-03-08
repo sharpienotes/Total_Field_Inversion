@@ -54,5 +54,35 @@ Liu et al.: Preconditioned Total Field Inversion (TFI) Method for Quantitative S
 - decomposes field into background and local field
     - local: magntic field gerneated by the susceptibility inside a given ROI
     - background: generated outside of ROI
+- variety of background removal (BFR) techniques exist 
+- regularization is used as local field  inversion (LFI)
+- errors in background field propagate to subsequential local field
+- here: use total field inversion (TFI)
+    * estimate \chi_B and \chi_L jointly
+    * their sum is the total susceptibility
+
+#### TFI:
+-  some algorithms slow down the process
+    * e.g. conjugate gradient (CG)
+    * solution: use prior-enhanced preconditioning to improve convergence
+        * approximates covariance matrix
+        * is right-handed
+        * increases convergence speed
+        * design: difference in matrix between voxel inside and outside M approx. same as
+            * difference in susceptibility between local and background region 
+        * thresholding of R2* :
+            * account for strong susc. within M
+            * assuming voxels with high R2* have high susceptibility
+- compute final susceptibility
+    * using Gauss-Newton method
+        
+#### Laplacian- based QSM methods:
+- some examples:
+    1) single step QSM (SSQSM)
+    2) differential QSM
+- enable QSM reconstruction within single step
+- always come with erosion of the ROI
+    - depends on width of kernel how much
+        
 
 
