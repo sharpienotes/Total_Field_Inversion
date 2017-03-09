@@ -39,11 +39,13 @@ a Single-Angle Acquisition: Comparison with COSMOS in Human Brain Imaging
             - ensures agreement betw.:
                 - local field induced by estimated \chi distribution 
                 - local field as measured from the phase image
+                
     ##### Susceptibility map: 
     - get knowledge about
         - iron 
         - calcium 
         - gadolinium
+        
     ##### Nonferromagnetic biomaterial: 
     - generates local field:
     - z component (along B) equal to 
@@ -51,19 +53,25 @@ a Single-Angle Acquisition: Comparison with COSMOS in Human Brain Imaging
         - and unit dipole field
             - magic angle: dipole field has zeros in Fourier space
             - creates noise amplification and ill-conditioned problem
+            
     ##### Getting the field map:
     1) extract phase images from comples MRI data
+    
     2) one-dimensional temporal unwrapping of the phase in each voxel
+    
     3) weighted least-squares fit of temporally unwrapped phases 
         - in each voxel 
         - over TE
+        
     4) frequency aliasing on field map:
         - magnitude map guided spatial unwrapping algorithm
+        
     5) projection onto dipole fields procedure 
         - removes background 
         - all the voxels inside FOV but outside the brain region assumed responsible for background field inside brain
         - strength of dipole in each background voxel 
             - weighted least-squares fit to field inside brain
+            
     6) corrected field as input for field-to-source inverse problem
         
     ##### Susceptibility analysis:
