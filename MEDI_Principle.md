@@ -67,7 +67,6 @@ a Single-Angle Acquisition: Comparison with COSMOS in Human Brain Imaging
         - magnitude map guided spatial unwrapping algorithm
         
     5) projection onto dipole fields procedure 
-    
         - removes background 
         
         - all the voxels inside FOV but outside the brain region assumed responsible for background field inside brain
