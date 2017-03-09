@@ -78,4 +78,6 @@ a Single-Angle Acquisition: Comparison with COSMOS in Human Brain Imaging
      - described in detail how to compare the two methods and how to get the desired data from the scans 
        
 #### Results
+- scanning much easier for MEDI than for COSMOS (first only needs  one angle for acquisition)
+- calculation time of MEDI 5x longer (needs more iterations)
 
