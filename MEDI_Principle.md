@@ -7,6 +7,7 @@ a Single-Angle Acquisition: Comparison with COSMOS in Human Brain Imaging
 # Basics:
 - Arbitrary susceptibility distribution from the measured MR signal phase: 
     - challenging, ill-conditioned inverse problem
+    
 ### COSMOS: 
 - can be used for this
 - needs multiple orientation measuements though
