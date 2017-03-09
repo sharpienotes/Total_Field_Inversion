@@ -63,19 +63,19 @@ Liu et al.: Preconditioned Total Field Inversion (TFI) Method for Quantitative S
 
 #### TFI:
 -  some algorithms slow down the process
-    * e.g. conjugate gradient (CG)
-    * solution: use prior-enhanced preconditioning to improve convergence
-        * approximates covariance matrix
-        * is right-handed
-        * increases convergence speed
-        * design: difference in matrix between voxel inside and outside M approx. same as
-            * difference in susceptibility between local and background region 
-        * thresholding of R2* :
-            * account for strong susc. within M
-            * assuming voxels with high R2* have high susceptibility
+* e.g. conjugate gradient (CG)
+* solution: use prior-enhanced preconditioning to improve convergence
+    * approximates covariance matrix
+    * is right-handed
+    * increases convergence speed
+    * design: difference in matrix between voxel inside and outside M approx. same as
+        * difference in susceptibility between local and background region 
+    * thresholding of R2* :
+        * account for strong susc. within M
+        * assuming voxels with high R2* have high susceptibility
 - compute final susceptibility
-    * using Gauss-Newton method
-        
+* using Gauss-Newton method
+    
 #### Laplacian- based QSM methods:
 - some examples:
     1) single step QSM (SSQSM)
@@ -83,6 +83,9 @@ Liu et al.: Preconditioned Total Field Inversion (TFI) Method for Quantitative S
 - enable QSM reconstruction within single step
 - always come with erosion of the ROI
     - depends on width of kernel how much
-        
+- background susceptibility disappears after application of Laplacian 
+
+### Methods: 
+- gives details on how to simulate, acquire etc
 
 
