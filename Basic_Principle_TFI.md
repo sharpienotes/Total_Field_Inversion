@@ -10,7 +10,8 @@ Liu et al.: Preconditioned Total Field Inversion (TFI) Method for Quantitative S
   - background field removal
   
   - local field inversion (LFI)
-
+    - TFI does not have those two any more!
+        
 - improve QSM quality in presence of large susceptibility changes
 - brain, air-filled sinus, skull, fat
 
