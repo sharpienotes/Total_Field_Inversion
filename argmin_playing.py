@@ -1,16 +1,18 @@
 # this file is used to play with the argmin function and get a grasp on it
 
 import numpy
+import scipy
+from scipy import optimize
 
 #numbers = numpy.random.random([3,3,3,5,4])
 #values = numpy.arange(15).reshape(3, 5)
 #values = numpy.random.random([3,3,3,5,4])
 values = numpy.array([10, 9, 4, 9, 4, 1, 2, 3, 4, 5, 3, 3]).reshape(3,4)
-print(values)
+#print(values)
 minmin = numpy.ndarray.argmin(values)
-print('Good Afternoon, the minimum is at: '+str(minmin))
+#print('Good Afternoon, the minimum is at: '+str(minmin))
 squirrel = numpy.unravel_index(minmin, values.shape)
-print(squirrel)
+#print(squirrel)
 
 #output is:
 #[[10  9  4  9]
@@ -19,4 +21,13 @@ print(squirrel)
 #Good Afternoon, the minimum is at: 5
 #(1, 1)
 
+badger = numpy.array([1,2,3,4,5,6,7,8,9,10,11,12]).reshape(3,4)
 # unravel translates the number of the coordinate to an actual shape in space for this array
+#a = scipy.optimize.nnls(squirrel)
+
+#scipy.optimize.minimize(method=’Newton-CG’)
+# todo: test with sin(x) and derivative cos(x)
+# might not work with pure arrays like that but rather an actual dependence and derivative relation
+badger_prime = numpy.array([1,2,3,4,5,6,7,8,9,10,11,12]).reshape(3,4)
+#print(badger_prime)
+Newton = scipy.optimize.fmin_ncg(badger,[1,1],badger_prime) # nope, does not work like that!
