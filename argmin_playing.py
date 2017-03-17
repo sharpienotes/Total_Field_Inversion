@@ -1,6 +1,6 @@
 import numpy as np
 import scipy
-
+from scipy import optimize
 import pymrt.utils as pmu
 import pymrt.geometry as pmg
 
@@ -57,10 +57,39 @@ def dipole_kernel(
     return dk_arr
 
 
+# definition of the place holders for data input for later:
+
 W_proxy = np.arange(4,31).reshape(3,3,3)
-data_proxy = np.arange(20,47).reshape(3,3,3)
+data_proxy = np.arange(20,47).reshape(3,3,3) # can use sphere here instead
 convolution_proxy = np.arange(27).reshape(3,3,3)
 M_g_proxy = np.arange(2,29).reshape(3,3,3)
-chi_proxy = np.arange(50,77).reshape(3,3,3)
+chi_proxy = np.sin(np.arange(50,77).reshape(3,3,3))
+chi_prime_proxy = np.cos(np.arange(50,77).reshape(3,3,3))
+d_proxy = np.arange(70,97).reshape(3,3,3)
 
 
+# convolution of d and chi:
+kernel = np.fft.fftn(d_proxy)
+chi_fourier = np.fft.fftn(chi_proxy)
+a = abs(W_proxy)
+norm_part = np.linalg.norm(data_proxy)
+convolution_calculated = kernel*chi_fourier
+lambda_proxy = np.power(10.,-3)
+P_b_proxy = 30
+# missing the laplace part! and the correct data
+# input does not have any x to solve for!
+input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.linalg.norm((M_g_proxy)*chi_proxy))
+def input_Gauss(data_proxy):
+    return 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.linalg.norm((M_g_proxy)*chi_proxy))
+
+def input_fprime(data_proxy):
+    #0*data_proxy
+    return 0.
+
+print('\n The big Gaussian input mess boils down to: '+str(input_for_gauss)+'\n')
+#trial_chi_star = scipy.optimize.fmin_ncg(input_for_gauss,1,chi_prime_proxy)
+#testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=np.asarray([1,2,3]), fprime=input_fprime)
+testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=0., fprime=input_fprime)
+print('success!')
+#print(input_Gauss(data_proxy))
+#print(input_fprime(data_proxy))
