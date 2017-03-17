@@ -78,18 +78,19 @@ lambda_proxy = np.power(10.,-3)
 P_b_proxy = 30
 # missing the laplace part! and the correct data
 # input does not have any x to solve for!
-input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.linalg.norm((M_g_proxy)*chi_proxy))
+
+# np.sum(abs()) corresponds to the l_1 norm
+# np.linalg.norm() corresponds to the l_2 norm, which is then squared
+input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+
 def input_Gauss(data_proxy):
-    return 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.linalg.norm((M_g_proxy)*chi_proxy))
+    return 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
 
 def input_fprime(data_proxy):
-    #0*data_proxy
-    return 0.
+    return 12354.
 
 print('\n The big Gaussian input mess boils down to: '+str(input_for_gauss)+'\n')
-#trial_chi_star = scipy.optimize.fmin_ncg(input_for_gauss,1,chi_prime_proxy)
-#testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=np.asarray([1,2,3]), fprime=input_fprime)
 testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=0., fprime=input_fprime)
 print('success!')
-#print(input_Gauss(data_proxy))
-#print(input_fprime(data_proxy))
+
+
