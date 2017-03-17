@@ -35,22 +35,39 @@ Newton = scipy.optimize.fmin_ncg(f_callable,1,f_prime_callable)
 
 import numpy as np
 
+# definition of the place holders for data input for later:
 
 W_proxy = np.arange(4,31).reshape(3,3,3)
 data_proxy = np.arange(20,47).reshape(3,3,3) # can use sphere here instead
 convolution_proxy = np.arange(27).reshape(3,3,3)
 M_g_proxy = np.arange(2,29).reshape(3,3,3)
-chi_proxy = np.arange(50,77).reshape(3,3,3)
+chi_proxy = np.sin(np.arange(50,77).reshape(3,3,3))
+chi_prime_proxy = np.cos(np.arange(50,77).reshape(3,3,3))
 d_proxy = np.arange(70,97).reshape(3,3,3)
-
+sin_array = np.asarray([[np.sin, np.sin, np.sin],[np.sin, np.sin, np.sin],[np.sin, np.sin, np.sin]])
+cos_array = np.asarray([[np.cos, np.cos, np.cos],[np.cos, np.cos, np.cos],[np.cos, np.cos, np.cos]])
+#arr_sin = [np.sin for j in range(27)].reshape(3,3,3)
+#arr_cos = np.array([np.cos for j in range(27)].reshape((3,3,3)))
 # convolution of d and chi:
 kernel = np.fft.fftn(d_proxy)
 chi_fourier = np.fft.fftn(chi_proxy)
 a = abs(W_proxy)
 norm_part = np.linalg.norm(data_proxy)
-print(norm_part)
 convolution_calculated = kernel*chi_fourier
 lambda_proxy = 10e-04
 P_b_proxy = 30
 
-input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*abs(M_g_proxy)*#laplace of chi_proxy)
+# missing the laplace part! and the correct data
+# input does not have any x to solve for!
+input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.linalg.norm((M_g_proxy)*chi_proxy))
+print(input_for_gauss)
+#trial_chi_star = scipy.optimize.fmin_ncg(input_for_gauss,1,chi_prime_proxy)
+#testing_stuff = scipy.optimize.fmin_ncg(f=sin_array, x0=np.ones((3,3,3)), fprime=cos_array)
+#print('success!')
+#print(arr_cos)
+#print(np.cos)
+
+
+arr_sin = np.asarray([np.sin for j in range(27)])
+arr_sin = arr_sin.reshape((3,3,3))
+print(arr_sin.shape)
