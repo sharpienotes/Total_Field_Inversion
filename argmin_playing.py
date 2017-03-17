@@ -76,15 +76,17 @@ norm_part = np.linalg.norm(data_proxy)
 convolution_calculated = kernel*chi_fourier
 lambda_proxy = np.power(10.,-3)
 P_b_proxy = 30
-# missing the laplace part! and the correct data
-# input does not have any x to solve for!
 
 # np.sum(abs()) corresponds to the l_1 norm
-# np.linalg.norm() corresponds to the l_2 norm, which is then squared
+# np.linalg.norm() corresponds to the l_2 norm (Frobenius), which is then squared
+# todo: check with definition of l2 norm in paper of Kressler et al., possibly divide by trace as well!!!!
+# todo: check if zero padding is necessary (Kressler et al. p. 9)
+
 input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
 
 def input_Gauss(data_proxy):
     return 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+
 
 def input_fprime(data_proxy):
     return 12354.
