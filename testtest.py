@@ -90,5 +90,22 @@ def input_fprime(data_proxy):
 #other_test = scipy.optimize.fmin_tnc(func=input_Gauss,x0=0.,stepmx=25)
 #other_other_test = scipy.optimize.minimize(fun=input_Gauss,method='L-BFGS-B',x0=0.)
 
-other_adfaother_test = scipy.optimize.minimize(fun=input_Gauss,method='BFGS',x0=0.)
+#other_adfaother_test = scipy.optimize.minimize(fun=input_Gauss,method='BFGS',x0=0.)
 
+#nelder = scipy.optimize.minimize(fun=input_Gauss, x0=0., args=(), method='Nelder-Mead', tol=None, callback=None, options={'disp': False, 'initial_simplex': None, 'maxiter': None, 'xatol': 0.0001, 'return_all': False, 'fatol': 0.0001, 'func': None, 'maxfev': None})
+
+#aaddfda = scipy.optimize.minimize(fun=input_Gauss, x0=0.,method='Nelder-Mead')
+
+
+import nibabel as nib
+from pymrt.input_output import load, save
+
+
+# put thtis into the equation to actually make up the function for input f
+def abcd():
+    abcd = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/dipole_kernel_128.nii.gz')
+    return abcd
+
+other_adfaother_test = scipy.optimize.minimize(fun=abcd,method='BFGS',x0=0.)
+
+print(abcd.shape)
