@@ -70,4 +70,25 @@ print(input_for_gauss)
 
 arr_sin = np.asarray([np.sin for j in range(27)])
 arr_sin = arr_sin.reshape((3,3,3))
-print(arr_sin.shape)
+#print(arr_sin.shape)
+
+inverse_std = 1/np.std(data_proxy)
+W_proxy = np.arange(4,31).reshape(3,3,3)
+identity_matrix = np.asarray([np.identity(3),np.identity(3),np.identity(3)])
+W_true_proxy = np.dot(identity_matrix, inverse_std)
+
+input_for_gauss = 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+
+def input_Gauss(data_proxy):
+    return 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+
+
+def input_fprime(data_proxy):
+    return 12354.
+
+# alternative without big derivative:
+#other_test = scipy.optimize.fmin_tnc(func=input_Gauss,x0=0.,stepmx=25)
+#other_other_test = scipy.optimize.minimize(fun=input_Gauss,method='L-BFGS-B',x0=0.)
+
+other_adfaother_test = scipy.optimize.minimize(fun=input_Gauss,method='BFGS',x0=0.)
+
