@@ -54,13 +54,18 @@ def dipole_kernel(
     # fix singularity at |k|^2 == 0 in the denominator
     singularity = np.isnan(dk_arr)
     dk_arr[singularity] = 1.0 / 3.0
+    #print('testing: '+str(kk_x)+str(kk_y)+str(kk_z))
     return dk_arr
 
 
 # definition of the place holders for data input for later:
-
-W_proxy = np.arange(4,31).reshape(3,3,3)
 data_proxy = np.arange(20,47).reshape(3,3,3) # can use sphere here instead
+
+inverse_std = 1/np.std(data_proxy)
+W_proxy = np.arange(4,31).reshape(3,3,3)
+identity_matrix = np.asarray([np.identity(3),np.identity(3),np.identity(3)])
+W_true_proxy = np.dot(identity_matrix, inverse_std)
+
 convolution_proxy = np.arange(27).reshape(3,3,3)
 M_g_proxy = np.arange(2,29).reshape(3,3,3)
 chi_proxy = np.sin(np.arange(50,77).reshape(3,3,3))
@@ -69,7 +74,7 @@ d_proxy = np.arange(70,97).reshape(3,3,3)
 
 
 # convolution of d and chi:
-kernel = np.fft.fftn(d_proxy)
+kernel = np.fft.fftn(dipole_kernel(shape=(3,3,3), origin=0.))
 chi_fourier = np.fft.fftn(chi_proxy)
 a = abs(W_proxy)
 norm_part = np.linalg.norm(data_proxy)
@@ -79,13 +84,12 @@ P_b_proxy = 30
 
 # np.sum(abs()) corresponds to the l_1 norm
 # np.linalg.norm() corresponds to the l_2 norm (Frobenius), which is then squared
-# todo: check with definition of l2 norm in paper of Kressler et al., possibly divide by trace as well!!!!
 # todo: check if zero padding is necessary (Kressler et al. p. 9)
 
-input_for_gauss = 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+input_for_gauss = 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
 
 def input_Gauss(data_proxy):
-    return 0.5*((np.linalg.norm(data_proxy - convolution_calculated))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+    return 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
 
 
 def input_fprime(data_proxy):
@@ -95,4 +99,4 @@ print('\n The big Gaussian input mess boils down to: '+str(input_for_gauss)+'\n'
 testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=0., fprime=input_fprime)
 print('success!')
 
-
+#print(np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))
