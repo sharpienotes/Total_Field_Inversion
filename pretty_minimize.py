@@ -1,10 +1,8 @@
 import os
 import datetime
-import math
 import numpy as np
 import scipy
 from scipy import optimize
-import nibabel as nib
 from pymrt.input_output import load, save
 import pymrt.utils as pmu
 
@@ -64,75 +62,68 @@ def dipole_kernel(
     return dk_arr
 
 
-#data = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
-def initial(
-        f= None,
-        shape_= None,
-        d= None,
-        W = None,
-        M_G = None,
-        chi = None,
+# getting the expression for the armin(chi) equation:
+def chi_star(
+        f=None,
+        shape=None,
+        d=None,
+        W=None,
+        M_G=None,
+        chi=None,
         lambda_ = np.power(10.,-3)):
     """
-    Takes data and puts it into the argmin(chi) equation.
-    """
 
-    if f == None:
+    Args:
+        f ():
+        shape ():
+        d ():
+        W ():
+        M_G ():
+        chi ():
+        lambda_ ():
+
+    Returns:
+
+    """
+    def chi_star_func(chi,
+            f=f,
+            d=d,
+            W=W,
+            M_G=M_G,
+            lambda_=lambda_):
+
+        return 0.5*((np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi)))
+                    ) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+
+    if f is None:
         f = np.ones((3,3,3))
 
-    if shape_ == None:
-        shape_ = f.shape
+    if shape is None:
+        shape = f.shape
 
-    ones_ = np.ones(shape_)
+    ones = np.ones(shape)
 
-    #[ones_ if param==None for param in (W,M_G,chi)]
+    for x in (chi, W, M_G):
+        if x is None:
+            x = ones
 
-    if W == None:
-        W = ones_
-    if M_G == None:
-        M_G = ones_
-    if chi == None:
-        chi = ones_
-    if d == None:
-        d = dipole_kernel(shape=shape_, origin=0.)
+    if d is None:
+        d = dipole_kernel(shape=shape, origin=0.)
+    minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
 
-    return 0.5*((np.linalg.norm(
-        W * (f - d * np.fft.fftn(chi)))
-                ) ** 2 +
-                lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
-
-
-    #print([x.shape for x in (chi, f, d, M_G, W, lambda_)])
-    #return([x for x in (data, shape_)])
+    return minimization['x']
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# x is the solution array, corresponds to chi_star in approach for GN
-# creation of output file:
 begin_time=datetime.datetime.now()
 filepath = 'chi.npz'
 if not os.path.isfile(filepath):
-    minimization = scipy.optimize.minimize(fun=data_input,method='BFGS',x0=matrix_proxy)
-    #minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
+    minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
+
     print('Your results are: \n '+str(minimization))
     chi_arr = minimization['x']
     np.savez(filepath, chi_arr=chi_arr)
@@ -147,3 +138,11 @@ save(
 end_time=datetime.datetime.now()
 time_elapsed = end_time - begin_time
 print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
+
+
+#other (might be useful later:)
+#data = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
+#minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
+#print([x.shape for x in (chi, f, d, M_G, W, lambda_)])
+#return([x for x in (data, shape)])
+# x is the solution array, corresponds to chi_star in approach for GN
