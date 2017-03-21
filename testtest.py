@@ -106,6 +106,68 @@ def abcd():
     abcd = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/dipole_kernel_128.nii.gz')
     return abcd
 
-other_adfaother_test = scipy.optimize.minimize(fun=abcd,method='BFGS',x0=0.)
+db_zero = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
 
-print(abcd.shape)
+def data_input(db_zero):
+    return
+
+#other_adfaother_test = scipy.optimize.minimize(fun=abcd,method='BFGS',x0=0.)
+
+#print(abcd.shape)
+
+# correct dipole kernel function without error message:
+def dipole_kernel(
+        shape,
+        origin=0.5,
+        theta=0.0,
+        phi=0.0):
+    """
+    Generate the 3D dipole kernel in the Fourier domain.
+
+    .. math::
+
+        C=\\frac{1}{3}-\\frac{k_z \\cos(\\theta)\\cos(\\phi)
+        -k_y\\sin(\\theta) \\cos(\\phi)+k_x\\sin(\\phi))^2}
+        {k_x^2 + k_y^2 + k_z^2}
+
+    Args:
+        shape (tuple[int]): 3D-shape of the dipole kernel array.
+            If not a 3D array, the function fails.
+        origin (float|tuple[float]): Relative position of the origin.
+            Values are in the [0, 1] interval.
+        theta (int|float): Angle of 1st rotation (along x-axis) in deg.
+            Equivalent to the projection in the yz-plane of the angle between
+            the main magnetic field B0 (i.e. the principal axis of the dipole
+            kernel) and the z-axis. If phi is 0, the projection simplifies to
+            the identity.
+        phi (int|float): Angle of 2nd rotation (along y-axis) in deg.
+            Equivalent to the projection in the xz-plane of the angle between
+            the main magnetic field B0 (i.e. the principal axis of the dipole
+            kernel) and the z-axis. If theta is 0, the projection simplifies to
+            the identity.
+
+    Returns:
+        dk_arr (np.ndarray): The dipole kernel in the Fourier domain.
+            Values are in the (1/3, -2/3) range.
+    """
+    #     / 1   (kz cos(th) cos(ph) - ky sin(th) cos(ph) + kx sin(ph))^2 \
+    # C = | - - -------------------------------------------------------- |
+    #     \ 3                      kx^2 + ky^2 + kz^2                    /
+    # convert input angles to radians
+    theta = np.deg2rad(theta)
+    phi = np.deg2rad(phi)
+    # generate the dipole kernel
+    assert (len(shape) == 3)
+    kk_x, kk_y, kk_z = pmu.coord(shape, origin)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        dk_arr = (1.0 / 3.0 - (
+            kk_z * np.cos(theta) * np.cos(phi)
+            - kk_y * np.sin(theta) * np.cos(phi)
+            + kk_x * np.sin(phi)) ** 2 /
+                  (kk_x ** 2 + kk_y ** 2 + kk_z ** 2))
+    # fix singularity at |k|^2 == 0 in the denominator
+    singularity = np.isnan(dk_arr)
+    dk_arr[singularity] = 1.0 / 3.0
+    return dk_arr
+
+print('Time elapsed: {c} seconds!'.format(c=12))
