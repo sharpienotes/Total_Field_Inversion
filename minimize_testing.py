@@ -63,26 +63,28 @@ def dipole_kernel(
 #--------------------------                      ------------------------------#
 
 #-------------------------- place holders for data ----------------------------#
-data_proxy = np.arange(20,47).reshape(3,3,3) # can use sphere here instead
+# some of them are redundant, just in place for now, to change later!
+data_proxy = np.arange(2097152).reshape(128,128,128) # can use sphere here instead
 db_zero = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
 data_proxy = db_zero
-matrix_proxy = np.ones((3,3,3))
+
+matrix_proxy = np.ones((128,128,128))
 inverse_std = 1/np.std(data_proxy)
-W_proxy = np.arange(4,31).reshape(3,3,3)
+W_proxy = np.arange(4,2097156).reshape(128,128,128)
 identity_matrix = np.asarray([np.identity(3),np.identity(3),np.identity(3)])
 W_true_proxy = np.dot(identity_matrix, inverse_std)
 W_true_proxy = matrix_proxy
 
-convolution_proxy = np.arange(27).reshape(3,3,3)
-M_g_proxy = np.arange(2,29).reshape(3,3,3)
+convolution_proxy = np.arange(2097152).reshape(128,128,128)
+M_g_proxy = np.arange(2,2097154).reshape(128,128,128)
 M_g_proxy = matrix_proxy
-chi_proxy = np.sin(np.arange(50,77).reshape(3,3,3))
-chi_prime_proxy = np.cos(np.arange(50,77).reshape(3,3,3))
-d_proxy = np.arange(70,97).reshape(3,3,3)
+chi_proxy = np.sin(np.arange(50,2097202).reshape(128,128,128))
+chi_prime_proxy = np.cos(np.arange(50,2097202).reshape(128,128,128))
+d_proxy = np.arange(70,2097222).reshape(128,128,128)
 
 
 # convolution of d and chi:
-kernel = np.fft.fftn(dipole_kernel(shape=(3,3,3), origin=0.))
+kernel = np.fft.fftn(dipole_kernel(shape=(128,128,128), origin=0.))
 chi_fourier = np.fft.fftn(chi_proxy)
 a = abs(W_proxy)
 norm_part = np.linalg.norm(data_proxy)
@@ -92,13 +94,20 @@ P_b_proxy = 30
 #--------------------------                      ------------------------------#
 
 
-
 #---------------------------- function input   --------------------------------#
 def data_input(data_proxy):
-    return 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+    return 0.5*((np.linalg.norm(np.multiply(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
 
 #---------------------------- function use   --------------------------------#
-# x is the solution array
+# x is the solution array, corresponds to chi_star in approach for GN
 minimization = scipy.optimize.minimize(fun=data_input,method='BFGS',x0=0.)
+#minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
 print('Your results are: \n '+str(minimization))
 
+p_proxy = np.ones((128,128,128))*(-1.81266051)
+chi_star = np.multiply(p_proxy,db_zero)
+print('The result is of shape: ' +str(chi_star.shape))
+print(np.sum(db_zero)/(128*128*128))
+print(np.sum(chi_star)/(128*128*128))
+print((np.sum(chi_star)/(128*128*128))/(np.sum(db_zero)/(128*128*128)))
+print(data_input(data_proxy))
