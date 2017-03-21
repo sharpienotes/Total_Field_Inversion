@@ -1,3 +1,4 @@
+import datetime
 import numpy as np
 import scipy
 from scipy import optimize
@@ -5,6 +6,9 @@ import pymrt.utils as pmu
 import pymrt.geometry as pmg
 
 from pymrt.constants import GAMMA, GAMMA_BAR
+
+begin_time = datetime.datetime.now()
+
 
 def dipole_kernel(
         shape,
@@ -54,49 +58,68 @@ def dipole_kernel(
     # fix singularity at |k|^2 == 0 in the denominator
     singularity = np.isnan(dk_arr)
     dk_arr[singularity] = 1.0 / 3.0
-    #print('testing: '+str(kk_x)+str(kk_y)+str(kk_z))
+    # print('testing: '+str(kk_x)+str(kk_y)+str(kk_z))
     return dk_arr
 
 
 # definition of the place holders for data input for later:
-data_proxy = np.arange(20,47).reshape(3,3,3) # can use sphere here instead
+data_proxy = np.arange(20, 47).reshape(3, 3, 3)  # can use sphere here instead
 
-inverse_std = 1/np.std(data_proxy)
-W_proxy = np.arange(4,31).reshape(3,3,3)
-identity_matrix = np.asarray([np.identity(3),np.identity(3),np.identity(3)])
+inverse_std = 1 / np.std(data_proxy)
+W_proxy = np.arange(4, 31).reshape(3, 3, 3)
+identity_matrix = np.asarray([np.identity(3), np.identity(3), np.identity(3)])
 W_true_proxy = np.dot(identity_matrix, inverse_std)
 
-convolution_proxy = np.arange(27).reshape(3,3,3)
-M_g_proxy = np.arange(2,29).reshape(3,3,3)
-chi_proxy = np.sin(np.arange(50,77).reshape(3,3,3))
-chi_prime_proxy = np.cos(np.arange(50,77).reshape(3,3,3))
-d_proxy = np.arange(70,97).reshape(3,3,3)
-
+convolution_proxy = np.arange(27).reshape(3, 3, 3)
+M_g_proxy = np.arange(2, 29).reshape(3, 3, 3)
+chi_proxy = np.sin(np.arange(50, 77).reshape(3, 3, 3))
+chi_prime_proxy = np.cos(np.arange(50, 77).reshape(3, 3, 3))
+d_proxy = np.arange(70, 97).reshape(3, 3, 3)
 
 # convolution of d and chi:
-kernel = np.fft.fftn(dipole_kernel(shape=(3,3,3), origin=0.))
+kernel = np.fft.fftn(dipole_kernel(shape=(3, 3, 3), origin=0.))
 chi_fourier = np.fft.fftn(chi_proxy)
 a = abs(W_proxy)
 norm_part = np.linalg.norm(data_proxy)
-convolution_calculated = kernel*chi_fourier
-lambda_proxy = np.power(10.,-3)
+convolution_calculated = kernel * chi_fourier
+lambda_proxy = np.power(10., -3)
 P_b_proxy = 30
 
 # np.sum(abs()) corresponds to the l_1 norm
-# np.linalg.norm() corresponds to the l_2 norm (Frobenius), which is then squared
+# np.linalg.norm() corresponds to the l_2 norm (Frobenius), which is then
+# squared
 # todo: check if zero padding is necessary (Kressler et al. p. 9)
 
-input_for_gauss = 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+input_for_gauss = 0.5 * ((np.linalg.norm(np.dot(W_true_proxy, (
+    data_proxy - convolution_calculated)))) ** 2 + lambda_proxy * np.sum(
+    abs((M_g_proxy) * (np.gradient(chi_proxy)))))
+
 
 def input_Gauss(data_proxy):
-    return 0.5*((np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+    return 0.5 * (
+        (np.linalg.norm(
+            np.dot(W_true_proxy, (data_proxy - convolution_calculated)))) ** 2 +
+        lambda_proxy * np.sum(abs(M_g_proxy * np.gradient(chi_proxy))))
 
 
 def input_fprime(data_proxy):
     return 12354.
 
-print('\n The big Gaussian input mess boils down to: '+str(input_for_gauss)+'\n')
-testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=0., fprime=input_fprime)
-print('success!')
 
-#print(np.linalg.norm(np.dot(W_true_proxy,(data_proxy - convolution_calculated))))
+print(f'\n The big Gaussian input mess boils down to: {input_for_gauss}\n')
+# testing = scipy.optimize.fmin_ncg(f=input_Gauss, x0=0., fprime=input_fprime)
+print('very success {P_b_proxy}!'.format_map(locals()))
+print('very success {x}!'.format(x=12))
+print('{} success {}!'.format('very', 12))
+print('{} success {c}!'.format('very', c=12))
+
+# print(np.linalg.norm(np.dot(W_true_proxy,(data_proxy -
+# convolution_calculated))))
+test_2 = scipy.optimize.minimize(fun=input_Gauss, method='BFGS', x0=0.)
+print(test_2)
+print(test_2['success'])
+
+end_time = datetime.datetime.now()
+print('{!s}'.format(end_time - begin_time))
+time_elapsed = end_time - begin_time
+print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
