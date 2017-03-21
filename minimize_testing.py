@@ -1,3 +1,5 @@
+import os
+import datetime
 import math
 import numpy as np
 import scipy
@@ -64,12 +66,11 @@ def dipole_kernel(
 
 #-------------------------- place holders for data ----------------------------#
 # some of them are redundant, just in place for now, to change later!
-data_proxy = np.arange(2097152).reshape(128,128,128) # can use sphere here instead
+db_zero = np.arange(2097152).reshape(128, 128, 128) # can use sphere here instead
 db_zero = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
-data_proxy = db_zero
 
 matrix_proxy = np.ones((128,128,128))
-inverse_std = 1/np.std(data_proxy)
+inverse_std = 1/np.std(db_zero)
 W_proxy = np.arange(4,2097156).reshape(128,128,128)
 identity_matrix = np.asarray([np.identity(3),np.identity(3),np.identity(3)])
 W_true_proxy = np.dot(identity_matrix, inverse_std)
@@ -84,10 +85,10 @@ d_proxy = np.arange(70,2097222).reshape(128,128,128)
 
 
 # convolution of d and chi:
-kernel = np.fft.fftn(dipole_kernel(shape=(128,128,128), origin=0.))
+kernel = (dipole_kernel(shape=(128,128,128), origin=0.))
 chi_fourier = np.fft.fftn(chi_proxy)
 a = abs(W_proxy)
-norm_part = np.linalg.norm(data_proxy)
+norm_part = np.linalg.norm(db_zero)
 convolution_calculated = kernel*chi_fourier
 lambda_proxy = np.power(10.,-3)
 P_b_proxy = 30
@@ -95,14 +96,29 @@ P_b_proxy = 30
 
 
 #---------------------------- function input   --------------------------------#
-def data_input(data_proxy):
-    return 0.5*((np.linalg.norm(np.multiply(W_true_proxy,(data_proxy - convolution_calculated))))**2 + lambda_proxy*np.sum(abs((M_g_proxy)*(np.gradient(chi_proxy)))))
+def data_input(
+        chi, f=db_zero, d=kernel, M_G=matrix_proxy, W=matrix_proxy,
+        lambda_=lambda_proxy):
+    print([x.shape for x in (chi, f, d, M_G, W, lambda_)])
+    chi = chi.reshape(f.shape)
+    return 0.5*((np.linalg.norm(W* (f - d * np.fft.fftn(chi)))) ** 2 + lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
 
 #---------------------------- function use   --------------------------------#
 # x is the solution array, corresponds to chi_star in approach for GN
-minimization = scipy.optimize.minimize(fun=data_input,method='BFGS',x0=0.)
-#minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
-print('Your results are: \n '+str(minimization))
+begin_time=datetime.datetime.now()
+filepath = 'chi.npz'
+if not os.path.isfile(filepath):
+    minimization = scipy.optimize.minimize(fun=data_input,method='BFGS',x0=matrix_proxy)
+    #minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
+    print('Your results are: \n '+str(minimization))
+    chi_arr = minimization['x']
+    np.savez(filepath, chi_arr=chi_arr)
+else:
+    data = np.load(filepath)
+    chi_arr = data['chi_arr']
+save(
+    '/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_chi_star.nii.gz', chi_arr.reshape(db_zero.shape))
+
 
 p_proxy = np.ones((128,128,128))*(-1.81266051)
 chi_star = np.multiply(p_proxy,db_zero)
@@ -110,4 +126,6 @@ print('The result is of shape: ' +str(chi_star.shape))
 print(np.sum(db_zero)/(128*128*128))
 print(np.sum(chi_star)/(128*128*128))
 print((np.sum(chi_star)/(128*128*128))/(np.sum(db_zero)/(128*128*128)))
-print(data_input(data_proxy))
+print(data_input(db_zero))
+end_time=datetime.datetime.now()
+print('{!s}'.format(end_time - begin_time))
