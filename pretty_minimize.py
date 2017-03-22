@@ -62,9 +62,6 @@ def dipole_kernel(
     return dk_arr
 
 
-#data = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
-
-# getting the expression for the armin(chi) equation:
 def chi_star(
         f=None,
         shape=None,
@@ -72,83 +69,134 @@ def chi_star(
         W=None,
         M_G=None,
         chi=None,
-        lambda_ = np.power(10.,-3)):
+        lambda_=np.power(10.,-3),
+        time=True):
     """
-        The function takes input data and a guess for chi to perform the minimization according to the 
-        scipy.optimize.minimize() function with the method='BFGS'. It therefore calculates all necessary
-        parameters if not provided for the input of the minimization to be of the form:
-        0.5*((np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi)))
-                    ) ** 2 +
-                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+    The function takes input data and a guess for chi to perform
+    the minimization according to the scipy.optimize.minimize() function
+    with the method='BFGS'. It calculates all necessary parameters if not
+    provided for the input of the minimization to be of the form:
+    0.5*((np.linalg.norm(
+        W * (f - d * np.fft.fftn(chi)))
+                ) ** 2 +
+                lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
         
     Args:
-        f (): Input data that is to be minimized. If not specified, takes it as (3,3,3) array of ones.
-        shape (): The shape of the input data. By default this is (3,3,3).
-        d (): The kernel of the respective dipole field, 
-                by default the dipole kernel in Fourier space according to the 'dipole_kernel' function.
-        W (): Data weighting term, by default an array of ones in the shape of f.
-        M_G (): Mask of the data, by default an array of ones in the shape of f.
-        chi (): Term that is actively fitted/guessed. By default an array of ones in the shape of f.
-        lambda_ (): A numerical parameter that is taken according to the situation. By default, it is 0.001.
+        f (np.ndarray): Input data that is to be minimized. If not specified,
+            takes it as (3,3,3) array of ones.
+        shape (tuple[int]): The shape of the input data.
+            By default this is (3,3,3).
+        d (np.ndarray): The kernel of the respective dipole field, by default
+            the dipole kernel in Fourier space according to the
+            'dipole_kernel' function.
+        W (np.ndarray): Data weighting term, by default array of ones in the
+            shape of f.
+        M_G (np.ndarray): Mask of the data, by default an array of ones in the
+            shape of f.
+        chi (np.ndarray): Term that is actively fitted/guessed. By default an
+            array of ones in the shape of f.
+        lambda_ (float): Numerical parameter taken according to the situation.
+            By default, it is 0.001.
+        time (bool): Boolean, gives choice if time for run should be printed.
+            By default it is printed (i.e. set to True).
 
     Returns:
-        1) The argument inside the argmin function to be minimized by the minimization step.
-        2) A file that contains chi as an array, which is the solution of the minimization function.
+        1) The argument inside the argmin function to be minimized.
+        2) A file that contains chi as an array,
+            which is the solution of the minimization function (called x).
         3) If that file already exists it gives a message that it does. 
-        4) The time elapsed per run is printed on screen by default. Set time=no if not wanted. 
+        4) The time elapsed per run is printed on screen by default.
+            Set time=False if not wanted.
     """
-    def chi_star_func(chi,
-            f=f,
-            d=d,
-            W=W,
-            M_G=M_G,
-            lambda_=lambda_):
 
-        return 0.5*((np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi)))
-                    ) ** 2 +
-                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
-# todo: make 4) happen, fix order here and describe second short function, check if all parameters below are still good
     if f is None:
         f = np.ones((3,3,3))
 
     if shape is None:
         shape = f.shape
 
-    ones = np.ones(shape)
+    ones = np.ones((shape))
 
-    for x in (chi, W, M_G):
-        if x is None:
-            x = ones
+    if chi is None:
+        chi = ones
+
+    if W is None:
+        W = ones
+
+    if M_G is None:
+        M_G = ones
+
+    chi = chi.reshape(f.shape)
 
     if d is None:
         d = dipole_kernel(shape=shape, origin=0.)
-        
-    begin_time=datetime.datetime.now()
+
+    print(chi.shape)
+    print(W.shape)
+    print(M_G.shape)
+    print(f.shape)
+    print(shape)
+    print(d.shape)
+
+    def chi_star_func(chi,
+        f=f,
+        d=d,
+        W=W,
+        M_G=M_G,
+        lambda_=lambda_):
+        """
+
+        Args:
+            chi (np.ndarray): Parameter that is actively minimized,
+                default from above.
+            f (np.ndarray): Input data, default from above.
+            d (np.ndarray): Dipole kernel, default from above.
+            W (np.ndarray): Data weighting factor, default from above.
+            M_G (np.ndarray): Mask, default from above.
+            lambda_ (float):Numerical value default from above.
+
+        Returns:
+            Calculates the input for the minimazation as:
+                0.5*((np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi)))
+                    ) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+
+        """
+        return 0.5*((np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi)))
+                    ) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+
+    begin_time = datetime.datetime.now()
+
+# performs minimization and writes results of minimization in an output file
     filepath = 'chi.npz'
     if not os.path.isfile(filepath):
-        minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
+        minimization = scipy.optimize.minimize(
+            fun=chi_star_func,method='BFGS',x0=ones)
+
         print('Your results are: \n '+str(minimization))
+
         chi_arr = minimization['x']
         np.savez(filepath, chi_arr=chi_arr)
+        return minimization['x']
+
     else:
         data = np.load(filepath)
         chi_arr = data['chi_arr']
-        save('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_chi_star.nii.gz', 
-                chi_arr.reshape(db_zero.shape))
-    end_time=datetime.datetime.now()
+        save(
+            '/home/raid3/vonhof/Documents/TFI_phan/phantom_chi_star.nii.gz',
+                chi_arr.reshape(f.shape))
+
+        print('Your file was successfully reshaped.')
+
+# time counter for run
+    end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
-    print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
-    return minimization['x']
+    if time is True:
+        print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
 
 
-
-
-
-#other (might be useful later:)
-#data = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
-#minimization = scipy.optimize.minimize(fun=data_input,method='L-BFGS-B',x0=0.)
-#print([x.shape for x in (chi, f, d, M_G, W, lambda_)])
-#return([x for x in (data, shape)])
-# x is the solution array, corresponds to chi_star in approach for GN
+# calling the function:
+chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz'))
