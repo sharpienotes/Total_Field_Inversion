@@ -81,9 +81,8 @@ def chi_star(
     of the minimization to be of the form:
 
     .. math:
-
         0.5 * ((np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi)))) ** 2 +
+            W * (f - np.fft.ifftn(d * np.fft.fftn(chi))))) ** 2 +
                     lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
 
     Args:
@@ -126,8 +125,8 @@ def chi_star(
     def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
         """Calculates the input for the minimazation."""
         chi = chi.reshape(shape)
-        result =  0.5 * (np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi))) ** 2 +
+        result = 0.5 * (np.linalg.norm(
+            W * (f - np.fft.ifftn(d * np.fft.fftn(chi)))) ** 2 +
                     lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
         return result
 
