@@ -62,6 +62,8 @@ def dipole_kernel(
     return dk_arr
 
 
+#data = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
+
 # getting the expression for the armin(chi) equation:
 def chi_star(
         f=None,
@@ -72,18 +74,29 @@ def chi_star(
         chi=None,
         lambda_ = np.power(10.,-3)):
     """
-
+        The function takes input data and a guess for chi to perform the minimization according to the 
+        scipy.optimize.minimize() function with the method='BFGS'. It therefore calculates all necessary
+        parameters if not provided for the input of the minimization to be of the form:
+        0.5*((np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi)))
+                    ) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+        
     Args:
-        f ():
-        shape ():
-        d ():
-        W ():
-        M_G ():
-        chi ():
-        lambda_ ():
+        f (): Input data that is to be minimized. If not specified, takes it as (3,3,3) array of ones.
+        shape (): The shape of the input data. By default this is (3,3,3).
+        d (): The kernel of the respective dipole field, 
+                by default the dipole kernel in Fourier space according to the 'dipole_kernel' function.
+        W (): Data weighting term, by default an array of ones in the shape of f.
+        M_G (): Mask of the data, by default an array of ones in the shape of f.
+        chi (): Term that is actively fitted/guessed. By default an array of ones in the shape of f.
+        lambda_ (): A numerical parameter that is taken according to the situation. By default, it is 0.001.
 
     Returns:
-
+        1) The argument inside the argmin function to be minimized by the minimization step.
+        2) A file that contains chi as an array, which is the solution of the minimization function.
+        3) If that file already exists it gives a message that it does. 
+        4) The time elapsed per run is printed on screen by default. Set time=no if not wanted. 
     """
     def chi_star_func(chi,
             f=f,
@@ -96,7 +109,7 @@ def chi_star(
             W * (f - d * np.fft.fftn(chi)))
                     ) ** 2 +
                     lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
-
+# todo: make 4) happen, fix order here and describe second short function, check if all parameters below are still good
     if f is None:
         f = np.ones((3,3,3))
 
@@ -111,33 +124,26 @@ def chi_star(
 
     if d is None:
         d = dipole_kernel(shape=shape, origin=0.)
-    minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
-
+        
+    begin_time=datetime.datetime.now()
+    filepath = 'chi.npz'
+    if not os.path.isfile(filepath):
+        minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
+        print('Your results are: \n '+str(minimization))
+        chi_arr = minimization['x']
+        np.savez(filepath, chi_arr=chi_arr)
+    else:
+        data = np.load(filepath)
+        chi_arr = data['chi_arr']
+        save('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_chi_star.nii.gz', 
+                chi_arr.reshape(db_zero.shape))
+    end_time=datetime.datetime.now()
+    time_elapsed = end_time - begin_time
+    print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
     return minimization['x']
 
 
 
-
-
-begin_time=datetime.datetime.now()
-filepath = 'chi.npz'
-if not os.path.isfile(filepath):
-    minimization = scipy.optimize.minimize(fun=chi_star,method='BFGS',x0=ones)
-
-    print('Your results are: \n '+str(minimization))
-    chi_arr = minimization['x']
-    np.savez(filepath, chi_arr=chi_arr)
-else:
-    data = np.load(filepath)
-    chi_arr = data['chi_arr']
-save(
-    '/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_chi_star.nii.gz', chi_arr.reshape(db_zero.shape))
-
-
-# time it took to finish the run:
-end_time=datetime.datetime.now()
-time_elapsed = end_time - begin_time
-print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
 
 
 #other (might be useful later:)
