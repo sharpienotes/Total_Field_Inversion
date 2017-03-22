@@ -74,6 +74,18 @@ def chi_star(
     """
     Minimization using scipy.optimize.minimize() and method='BFGS'.
 
+    The function takes input data and a guess for chi to perform
+    the minimization according to the scipy.optimize.minimize() function
+    with the method='BFGS'.
+    It calculates all necessary parameters if not provided for the input
+    of the minimization to be of the form:
+
+    .. math:
+
+        0.5 * ((np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi)))) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+
     Args:
         f (np.ndarray): Input data that is to be minimized.
             If not specified, takes it as (3,3,3) array of ones.
@@ -95,24 +107,13 @@ def chi_star(
 
     Returns:
 
-    Notes:
-        The function takes input data and a guess for chi to perform
-        the minimization according to the scipy.optimize.minimize() function
-        with the method='BFGS'.
-        It calculates all necessary parameters if not provided for the input
-        of the minimization to be of the form:
-
-        0.5 * ((np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi)))
-                    ) ** 2 +
-                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
     """
     # : setting the initial values:
-    ones = np.ones((shape))
     if f is None:
         f = np.ones((3,3,3))
     if shape is None:
         shape = f.shape
+    ones = np.ones((shape))
     if chi is None:
         chi = ones
     if W is None:
@@ -125,15 +126,18 @@ def chi_star(
     def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
         """Calculates the input for the minimazation."""
         chi = chi.reshape(shape)
-        result =  0.5 * ((np.linalg.norm(
-            W * (f - d * np.fft.fftn(chi)))
-                    ) ** 2 +
+        result =  0.5 * (np.linalg.norm(
+            W * (f - d * np.fft.fftn(chi))) ** 2 +
                     lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
         return result
 
+    lower_bound = list(ones.ravel() * -100)
+    upper_bound = list(ones.ravel() * 100)
     # performs the minimization
     minimization = scipy.optimize.minimize(
-        fun=chi_star_func,method='BFGS',x0=ones)
+        fun=chi_star_func,method='L-BFGS-B',x0=ones,
+        bounds=[(l, u) for l, u in zip(lower_bound, upper_bound)],
+        options=dict(maxiter=1, disp=100))
     # print('Your results are: \n '+str(minimization))  # debug
 
     chi_arr = minimization['x'].reshape(shape)
@@ -141,8 +145,8 @@ def chi_star(
 
 
 # ======================================================================
+# calling the function:
 if __name__ == '__main__':
-    # calling the function:
     begin_time = datetime.datetime.now()
     chi_arr = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz'))
 
