@@ -101,7 +101,7 @@ def data_input(
         lambda_=lambda_proxy):
     print([x.shape for x in (chi, f, d, M_G, W, lambda_)])
     chi = chi.reshape(f.shape)
-    return 0.5*((np.linalg.norm(W* (f - d * np.fft.fftn(chi)))) ** 2 + lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+    return 0.5*((np.linalg.norm(W* (f - np.fft.ifftn(d * np.fft.fftn(chi))))) ** 2 + lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
 
 #---------------------------- function use   --------------------------------#
 # x is the solution array, corresponds to chi_star in approach for GN
