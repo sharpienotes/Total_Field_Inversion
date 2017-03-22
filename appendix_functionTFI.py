@@ -136,13 +136,15 @@ def chi_star(
         b = lambda_ * P * inv *(M_G)
         c = 1/np.sqrt(np.abs(M_G * np.gradient(chi)) **2 + epsilon)
         d = M_G * np.gradient(P)
-        alpha = a + b * np.diag(c) * d
+        alpha = a + b * c * d
+        print(alpha)
+        # pseudo inverse of matrix
 
         e = P * np.fft.ifftn(d * np.fft.fftn(W * W))
         g = np.fft.ifftn(d * np.fft.fftn(chi))
         h = lambda_ * P * inv*(M_G)
         j = M_G * np.gradient(chi)
-        gamma = e * (f- g) - h * np.diag(c) * j
+        gamma = e * (f- g) - h * c * j
         # beta is the update
         beta = 1
         gamma = alpha * beta
