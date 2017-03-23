@@ -115,6 +115,7 @@ def chi_star(
     ones = np.ones((shape))
     if chi is None:
         chi = ones
+        chi = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
     if W is None:
         W = ones
     if M_G is None:
@@ -122,8 +123,7 @@ def chi_star(
     if d is None:
         d = dipole_kernel(shape=shape, origin=0.)
 
-    print(f)
-    P = ones
+    P = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
     # inv is the proxy for the inverse gradient operator
     inv = ones*(1.)
     epsilon = 0.01
@@ -142,7 +142,6 @@ def chi_star(
         c = 1/np.sqrt(np.abs(M_G * np.gradient(chi)) **2 + epsilon)
         d = M_G * np.gradient(P)
         alpha = a + b * c * d
-
         # todo: fix inv to be the actual inverse gradient operator
         e = P * np.fft.ifftn(d * np.fft.fftn(W * W))
         g = np.fft.ifftn(d * np.fft.fftn(chi))
@@ -152,18 +151,19 @@ def chi_star(
 
         # beta is the update (i.e. alpha*beta = gamma)
         beta = np.divide(gamma, alpha)
+
+
         return beta
+
 
 
 #-------------------------- ###################  ------------------------------#
     # calling the new function inside the function:
     alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
-
+    #deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
+     #       epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
     print('live long and prosper!')
-    print(beta.shape)
-    print(beta)
-
-
+    #print(beta.shape)
 
 # ======================================================================
 # calling the function:
@@ -183,3 +183,9 @@ if __name__ == '__main__':
 # misc:
 #print([x.shape for x in (a,b,c,d,alpha,e,g,h,j,gamma)])  # debug
 #return [x for x in [beta, gamma]]
+#print('\n j is: \n'+str(j))
+#return [x for x in [alpha,beta, gamma]]
+#print([x for x in (a,b,c,d,e,g,h,j)])  # debug
+#print('\n BETA: \n'+str(beta))
+#print('\n ALPHA: \n'+str(alpha))
+# #print('\n GAMMA: \n'+str(gamma))
