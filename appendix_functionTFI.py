@@ -1,8 +1,5 @@
-import os
 import datetime
 import numpy as np
-import scipy
-from scipy import optimize
 from pymrt.input_output import load, save
 import pymrt.utils as pmu
 
@@ -109,8 +106,10 @@ def chi_star(
 
     """
     # : setting the initial values:
+    # todo: set f back to what it was before testing!
     if f is None:
         f = np.ones((3,3,3))
+        f = np.multiply(f,15.)
     if shape is None:
         shape = f.shape
     ones = np.ones((shape))
@@ -123,13 +122,19 @@ def chi_star(
     if d is None:
         d = dipole_kernel(shape=shape, origin=0.)
 
+    print(f)
     P = ones
     # inv is the proxy for the inverse gradient operator
-    inv = ones
+    inv = ones*(1.)
     epsilon = 0.01
+    alpha = 1.
+    beta = 1.
+    gamma = 1.
 
 #-------------------------- derivative function  ------------------------------#
-    def deriv_func(d=d,W=W, P=P, M_G=M_G, chi=chi,epsilon=epsilon,f=f):
+    def deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
+            epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma):
+
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
 
@@ -137,43 +142,26 @@ def chi_star(
         c = 1/np.sqrt(np.abs(M_G * np.gradient(chi)) **2 + epsilon)
         d = M_G * np.gradient(P)
         alpha = a + b * c * d
-        print(alpha)
-        # pseudo inverse of matrix
 
+        # todo: fix inv to be the actual inverse gradient operator
         e = P * np.fft.ifftn(d * np.fft.fftn(W * W))
         g = np.fft.ifftn(d * np.fft.fftn(chi))
         h = lambda_ * P * inv*(M_G)
         j = M_G * np.gradient(chi)
-        gamma = e * (f- g) - h * c * j
-        # beta is the update
-        beta = 1
-        gamma = alpha * beta
-        print(gamma)
-        return gamma
+        gamma = e * (f - g) - h * c * j
+
+        # beta is the update (i.e. alpha*beta = gamma)
+        beta = np.divide(gamma, alpha)
+        return beta
+
 
 #-------------------------- ###################  ------------------------------#
+    # calling the new function inside the function:
+    alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
 
-
-    def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
-        """Calculates the input for the minimazation."""
-        chi = chi.reshape(shape)
-        result =  0.5 * (np.linalg.norm(
-            W * (f - np.fft.ifftn(d * np.fft.fftn(chi)))) ** 2 +
-                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
-        return result
-
-    lower_bound = list(ones.ravel() * -100)
-    upper_bound = list(ones.ravel() * 100)
-    # performs the minimization
-    minimization = scipy.optimize.minimize(
-        fun=chi_star_func,method='L-BFGS-B',x0=ones,
-        bounds=[(l, u) for l, u in zip(lower_bound, upper_bound)],
-        options=dict(maxiter=1, disp=100))
-    # print('Your results are: \n '+str(minimization))  # debug
-
-    chi_arr = minimization['x'].reshape(shape)
-    return chi_arr
-
+    print('live long and prosper!')
+    print(beta.shape)
+    print(beta)
 
 
 
@@ -182,9 +170,16 @@ def chi_star(
 if __name__ == '__main__':
     begin_time = datetime.datetime.now()
 
+    chi_star()
+
     # saving the results here:
-    save('')
+    #save('')
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
     print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
+
+
+# misc:
+#print([x.shape for x in (a,b,c,d,alpha,e,g,h,j,gamma)])  # debug
+#return [x for x in [beta, gamma]]
