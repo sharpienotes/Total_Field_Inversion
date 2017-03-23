@@ -129,12 +129,12 @@ def chi_star(
     inv = ones*(1.)
 
     # setting initial values and introducing alpha, beta, gamma for deriv_func
-    epsilon = 0.001
+    epsilon = pow(10,-6)
     alpha = 1.
     beta = 1.
     gamma = 1.
 
-#-------------------------- derivative function  ------------------------------#
+    #-------------------------- derivative function  --------------------------#
     def deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
             epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma):
         '''
@@ -169,18 +169,48 @@ def chi_star(
         beta = np.divide(gamma, alpha)
         return beta
 
+    #---------------------- ###################  ------------------------------#
 
-
-#-------------------------- ###################  ------------------------------#
-    # calling the new function inside the function:
+    # calling the update computation function:
     alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
     print('The update is the following: \n {b} '.format(b=beta))
 
-# ======================================================================
+    #---------------------- ###################  ------------------------------#
+    def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
+        """Calculates the input for the minimazation."""
+        chi = chi.reshape(shape)
+        result = 0.5 * (np.linalg.norm(
+            W * (f - np.fft.ifftn(d * np.fft.fftn(chi)))) ** 2 +
+                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+        return result
+
+    #---------------------- ###################  ------------------------------#
+    horst = 5
+    hilde = 5
+
+    def comparison(horst, hilde):
+        y_n = chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_)
+        dy_n = deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
+                epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
+
+        y_n_norm = np.linalg.norm(y_n)
+        dy_n_norm = np.linalg.norm(dy_n)
+        ratio = np.divide(dy_n_norm,y_n_norm)
+
+        if ratio > 0.01:
+            print('Update yields no better results.')
+        else:
+            print('Update was necessary to improve results.')
+        wolke = horst + hilde
+        print('here we are' +str(horst-hilde- wolke))
+
+
+# =============================================================================
 # calling the function:
 if __name__ == '__main__':
     begin_time = datetime.datetime.now()
 
+    # execute whole function (with two sub-functions)
     chi_star()
 
     # saving would go here
