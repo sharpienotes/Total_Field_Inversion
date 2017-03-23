@@ -106,7 +106,7 @@ def chi_star(
 
     """
     # : setting the initial values:
-    # todo: set f back to what it was before testing!
+    # todo: set f, chi and P back to what it was before testing!
     if f is None:
         f = np.ones((3,3,3))
         f = np.multiply(f,15.)
@@ -124,9 +124,12 @@ def chi_star(
         d = dipole_kernel(shape=shape, origin=0.)
 
     P = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
+
     # inv is the proxy for the inverse gradient operator
     inv = ones*(1.)
-    epsilon = 0.01
+
+    # setting initial values and introducing alpha, beta, gamma for deriv_func
+    epsilon = 0.001
     alpha = 1.
     beta = 1.
     gamma = 1.
@@ -134,6 +137,19 @@ def chi_star(
 #-------------------------- derivative function  ------------------------------#
     def deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
             epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma):
+        '''
+            Computes the update for the Gauss-Newton method.
+
+            Uses the simplification of: alpha*beta = gamma,
+            where beta is the update to be computed (i.e. dy_n).
+
+        Args:
+            The ones that are not known from above are:
+            P (): the R2* threshold map
+            epsilon (): a small number, arbitrary
+        Returns:
+            beta, the update to be computed
+        '''
 
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
@@ -149,10 +165,8 @@ def chi_star(
         j = M_G * np.gradient(chi)
         gamma = e * (f - g) - h * c * j
 
-        # beta is the update (i.e. alpha*beta = gamma)
+        # computation of beta (element-wise division of ndarrays)
         beta = np.divide(gamma, alpha)
-
-
         return beta
 
 
@@ -160,10 +174,7 @@ def chi_star(
 #-------------------------- ###################  ------------------------------#
     # calling the new function inside the function:
     alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
-    #deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
-     #       epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
-    print('live long and prosper!')
-    #print(beta.shape)
+    print('The update is the following: \n {b} '.format(b=beta))
 
 # ======================================================================
 # calling the function:
@@ -172,8 +183,7 @@ if __name__ == '__main__':
 
     chi_star()
 
-    # saving the results here:
-    #save('')
+    # saving would go here
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
@@ -181,6 +191,7 @@ if __name__ == '__main__':
 
 
 # misc:
+    # #save('')
 #print([x.shape for x in (a,b,c,d,alpha,e,g,h,j,gamma)])  # debug
 #return [x for x in [beta, gamma]]
 #print('\n j is: \n'+str(j))
@@ -188,4 +199,8 @@ if __name__ == '__main__':
 #print([x for x in (a,b,c,d,e,g,h,j)])  # debug
 #print('\n BETA: \n'+str(beta))
 #print('\n ALPHA: \n'+str(alpha))
-# #print('\n GAMMA: \n'+str(gamma))
+#print('\n GAMMA: \n'+str(gamma))
+#print(beta.shape)
+
+#deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
+#       epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
