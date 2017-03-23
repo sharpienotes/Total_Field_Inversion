@@ -147,10 +147,11 @@ def chi_star(
 # calling the function:
 if __name__ == '__main__':
     begin_time = datetime.datetime.now()
-    chi_arr = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz'))
+    chi_arr = chi_star(
+        f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
 
     # saving the results here:
-    save('/home/raid3/vonhof/Documents/TFI_phan/phantom_chi_star.nii.gz',chi_arr)
+    save('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs_pretty.nii.gz',chi_arr)
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
