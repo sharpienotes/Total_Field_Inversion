@@ -114,7 +114,7 @@ def chi_star(
         shape = f.shape
     ones = np.ones((shape))
     if chi is None:
-        chi = ones
+       # chi = ones
         chi = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
     if W is None:
         W = ones
@@ -154,15 +154,15 @@ def chi_star(
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
 
-        b = lambda_ * P * inv *(M_G)
-        c = 1/np.sqrt(np.abs(M_G * np.gradient(chi)) **2 + epsilon)
-        d = M_G * np.gradient(P)
+        b = lambda_ * P * pmu.inv_gradient(M_G)
+        c = 1/np.sqrt(np.abs(M_G * pmu.gradient(chi)) **2 + epsilon)
+        d = M_G * pmu.gradient(P)
         alpha = a + b * c * d
         # todo: fix inv to be the actual inverse gradient operator
         e = P * np.fft.ifftn(d * np.fft.fftn(W * W))
         g = np.fft.ifftn(d * np.fft.fftn(chi))
-        h = lambda_ * P * inv*(M_G)
-        j = M_G * np.gradient(chi)
+        h = lambda_ * P * pmu.inv_gradient(M_G)
+        j = M_G * pmu.gradient(chi)
         gamma = e * (f - g) - h * c * j
 
         # computation of beta (element-wise division of ndarrays)
@@ -173,7 +173,7 @@ def chi_star(
 
     # calling the update computation function:
     alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
-    print('The update is the following: \n {b} '.format(b=beta))
+    #print('The update is the following: \n {b} '.format(b=beta))
 
     #---------------------- ###################  ------------------------------#
     def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
@@ -185,25 +185,39 @@ def chi_star(
         return result
 
     #---------------------- ###################  ------------------------------#
-    horst = 5
-    hilde = 5
+    counter = 0
+    # todo: find a good improvement function here
 
-    def comparison(horst, hilde):
-        y_n = chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_)
-        dy_n = deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
-                epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
+    # todo: implement the update iterations
+    # todo: perform the improvement in update with machine learning?
+    def comparison(chi_star_func,deriv_func, counter = counter, chi=chi):
+        while counter < 10:
+            # y_n corresponds to A1 in the appendix, dy_n is rearranged A3
+            y_n = chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_)
+            dy_n = deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
+                    epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
 
-        y_n_norm = np.linalg.norm(y_n)
-        dy_n_norm = np.linalg.norm(dy_n)
-        ratio = np.divide(dy_n_norm,y_n_norm)
+            y_n_norm = np.linalg.norm(y_n)
+            dy_n_norm = np.linalg.norm(dy_n)
+            ratio = np.divide(dy_n_norm,y_n_norm)
 
-        if ratio > 0.01:
-            print('Update yields no better results.')
-        else:
-            print('Update was necessary to improve results.')
-        wolke = horst + hilde
-        print('here we are' +str(horst-hilde- wolke))
+            if ratio < 0.01:
+                print('Update yields no better results.')
+                counter += 1
+                break
+            else:
+                chi = chi + dy_n
+                #change chi and return it to top of loop and then outside
+                print('Update necessary to improve results!')
+                counter += 1
+                #return chi
+        print('\nIterative step: '+str(counter))
+        return [x for x in [counter, chi]]
 
+    #---------------------- ###################  ------------------------------#
+
+    execute = comparison(chi_star_func,deriv_func, counter = counter, chi=chi)
+    # todo: sth like chi = comparison(chi=chi)
 
 # =============================================================================
 # calling the function:
@@ -217,7 +231,7 @@ if __name__ == '__main__':
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
-    print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
+    print('Time elapsed: {c} seconds.'.format(c=time_elapsed))
 
 
 # misc:
@@ -234,3 +248,5 @@ if __name__ == '__main__':
 
 #deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
 #       epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
+
+#execute = comparison(chi_star_func,deriv_func, counter = counter, chi=chi)
