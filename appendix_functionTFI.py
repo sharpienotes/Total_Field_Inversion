@@ -112,7 +112,8 @@ def chi_star(
         f = np.multiply(f,15.)
     if shape is None:
         shape = f.shape
-    ones = np.ones((shape))
+    print(shape)
+    ones = np.ones(shape)
     if chi is None:
        # chi = ones
         chi = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
@@ -150,7 +151,8 @@ def chi_star(
         Returns:
             beta, the update to be computed
         '''
-
+        #todo: put y wherever gradP appears?
+        print(P.shape, d.shape, W.shape)
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
 
@@ -158,7 +160,6 @@ def chi_star(
         c = 1/np.sqrt(np.abs(M_G * pmu.gradient(chi)) **2 + epsilon)
         d = M_G * pmu.gradient(P)
         alpha = a + b * c * d
-        # todo: fix inv to be the actual inverse gradient operator
         e = P * np.fft.ifftn(d * np.fft.fftn(W * W))
         g = np.fft.ifftn(d * np.fft.fftn(chi))
         h = lambda_ * P * pmu.inv_gradient(M_G)
@@ -186,10 +187,7 @@ def chi_star(
 
     #---------------------- ###################  ------------------------------#
     counter = 0
-    # todo: find a good improvement function here
 
-    # todo: implement the update iterations
-    # todo: perform the improvement in update with machine learning?
     def comparison(chi_star_func,deriv_func, counter = counter, chi=chi):
         while counter < 10:
             # y_n corresponds to A1 in the appendix, dy_n is rearranged A3
@@ -207,17 +205,15 @@ def chi_star(
                 break
             else:
                 chi = chi + dy_n
-                #change chi and return it to top of loop and then outside
                 print('Update necessary to improve results!')
                 counter += 1
-                #return chi
         print('\nIterative step: '+str(counter))
-        return [x for x in [counter, chi]]
+        return counter, chi
 
     #---------------------- ###################  ------------------------------#
 
-    execute = comparison(chi_star_func,deriv_func, counter = counter, chi=chi)
-    # todo: sth like chi = comparison(chi=chi)
+    counter, chi = comparison(chi_star_func,deriv_func, counter = counter, chi=chi)
+    return chi
 
 # =============================================================================
 # calling the function:
@@ -225,9 +221,8 @@ if __name__ == '__main__':
     begin_time = datetime.datetime.now()
 
     # execute whole function (with two sub-functions)
-    chi_star()
-
-    # saving would go here
+    chi = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'), chi=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
+    save('/home/raid3/vonhof/Documents/Riccard_Data/230317/phantom_32_chi_tfi.nii.gz', chi)
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
