@@ -134,9 +134,9 @@ def chi_star(
     upper_bound = list(ones.ravel() * 100)
     # performs the minimization
     minimization = scipy.optimize.minimize(
-        fun=chi_star_func,method='L-BFGS-B',x0=ones,
+        fun=chi_star_func,method='L-BFGS-B',x0=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'),
         bounds=[(l, u) for l, u in zip(lower_bound, upper_bound)],
-        options=dict(maxiter=1, disp=100))
+        options=dict(maxiter=1000, disp=100))
     # print('Your results are: \n '+str(minimization))  # debug
 
     chi_arr = minimization['x'].reshape(shape)
