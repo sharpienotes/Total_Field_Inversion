@@ -89,6 +89,8 @@ P_b_proxy = 30
 # np.linalg.norm() corresponds to the l_2 norm (Frobenius), which is then
 # squared
 # todo: check if zero padding is necessary (Kressler et al. p. 9)
+# todo: add the inverse fourier transform of the convolution back to real space
+# todo: fix convolution_calculated back to real space
 
 input_for_gauss = 0.5 * ((np.linalg.norm(np.dot(W_true_proxy, (
     data_proxy - convolution_calculated)))) ** 2 + lambda_proxy * np.sum(
