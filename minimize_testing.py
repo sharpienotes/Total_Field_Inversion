@@ -67,7 +67,7 @@ def dipole_kernel(
 #-------------------------- place holders for data ----------------------------#
 # some of them are redundant, just in place for now, to change later!
 db_zero = np.arange(2097152).reshape(128, 128, 128) # can use sphere here instead
-db_zero = load('/home/raid3/vonhof/Documents/Riccardo Data/1703_phantomStuff/phantom_db0.nii.gz')
+db_zero = load('/home/raid3/vonhof/Documents/Riccardo_Data/1703_phantomStuff/phantom_db0.nii.gz')
 
 matrix_proxy = np.ones((128,128,128))
 inverse_std = 1/np.std(db_zero)
