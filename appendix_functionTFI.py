@@ -114,9 +114,9 @@ def chi_star(
         shape = f.shape
     print(shape)
     ones = np.ones(shape)
+
     if chi is None:
-       # chi = ones
-        chi = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
+        chi = np.random.rand(*shape)
     if W is None:
         W = ones
     if M_G is None:
@@ -124,10 +124,7 @@ def chi_star(
     if d is None:
         d = dipole_kernel(shape=shape, origin=0.)
 
-    P = np.asarray([[[ 0.36108928,  0.62471217,  0.84588093], [ 0.41268617,  0.98966733,  0.87496277], [ 0.27225611,  0.30073131,  0.89548151]], [[ 0.78761846,  0.23121758,  0.94643313], [ 0.04892174,  0.0101521,   0.19356135], [ 0.81979548,  0.20642601,  0.99701971]], [[ 0.76396554,  0.03408753,  0.70351918], [ 0.77452619,  0.67752006,  0.69115536], [ 0.70367785,  0.92206351,  0.16675467]]])
-
-    # inv is the proxy for the inverse gradient operator
-    inv = ones*(1.)
+    P = np.random.rand(*shape)
 
     # setting initial values and introducing alpha, beta, gamma for deriv_func
     epsilon = pow(10,-6)
@@ -151,8 +148,10 @@ def chi_star(
         Returns:
             beta, the update to be computed
         '''
-        #todo: put y wherever gradP appears?
-        print(P.shape, d.shape, W.shape)
+        #todo: (done) put y (i.e. chi) wherever gradP appears?
+        #print(P.shape, d.shape, W.shape)
+        chi = chi.reshape(f.shape)
+        P = P.reshape(f.shape)
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
 
@@ -168,18 +167,20 @@ def chi_star(
 
         # computation of beta (element-wise division of ndarrays)
         beta = np.divide(gamma, alpha)
-        return beta
+        return alpha, beta, gamma
 
     #---------------------- ###################  ------------------------------#
 
     # calling the update computation function:
     alpha, beta, gamma = deriv_func(alpha=alpha, beta=beta, gamma=gamma)
-    #print('The update is the following: \n {b} '.format(b=beta))
 
     #---------------------- ###################  ------------------------------#
     def chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_):
         """Calculates the input for the minimazation."""
-        chi = chi.reshape(shape)
+        print(chi.shape)
+        print('Live long and prosper!')
+
+        #chi = chi.reshape(shape)
         result = 0.5 * (np.linalg.norm(
             W * (f - np.fft.ifftn(d * np.fft.fftn(chi)))) ** 2 +
                     lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
@@ -194,10 +195,14 @@ def chi_star(
             y_n = chi_star_func(chi=chi, f=f, d=d, W=W, M_G=M_G, lambda_=lambda_)
             dy_n = deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
                     epsilon=epsilon,f=f, alpha=alpha, beta=beta, gamma=gamma)
-
+            #print('checking point: '+str(dy_n.shape))
             y_n_norm = np.linalg.norm(y_n)
             dy_n_norm = np.linalg.norm(dy_n)
             ratio = np.divide(dy_n_norm,y_n_norm)
+
+            dy_n = np.asarray(dy_n)
+            dy_n = dy_n.reshape(shape)
+            print('successsss')
 
             if ratio < 0.01:
                 print('Update yields no better results.')
@@ -222,6 +227,7 @@ if __name__ == '__main__':
 
     # execute whole function (with two sub-functions)
     chi = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'), chi=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
+
     save('/home/raid3/vonhof/Documents/Riccard_Data/230317/phantom_32_chi_tfi.nii.gz', chi)
 
     end_time = datetime.datetime.now()
