@@ -117,7 +117,7 @@ def chi_star(
         f = np.multiply(f,15.)
     if shape is None:
         shape = f.shape
-    print(shape)
+    #print(shape)
     ones = np.ones(shape)
 
     if chi is None:
@@ -154,7 +154,7 @@ def chi_star(
             beta, the update to be computed
         '''
         #todo: put y wherever gradP appears?
-        print(P.shape, d.shape, W.shape)
+        #print(P.shape, d.shape, W.shape)
         a = P * np.fft.ifftn(d * np.fft.fftn(W * W))* \
             np.fft.ifftn(d * np.fft.fftn(P))
 
@@ -192,8 +192,9 @@ def chi_star(
         beta_calc = deriv_func(d=d,W=W, P=P, lambda_=lambda_, M_G=M_G, chi=chi,
             epsilon=epsilon,f=f, alpha=alpha, beta_calc=beta, gamma=gamma)
 
-        chi_res = scipy.optimize.fmin_ncg(f=result, x0=chi, fprime=beta_calc)
-        return chi_res
+        chi_res = scipy.optimize.fmin_ncg(f=chi_star_func, x0=chi, fprime=deriv_func)
+        # xopt is zeroth term
+        return chi_res[0]
 
     chi_res = calculation(chi_star_func,deriv_func, beta_calc=beta)
     return chi_res
@@ -205,10 +206,13 @@ if __name__ == '__main__':
     chi_res = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'), chi=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
 
     save('/home/raid3/vonhof/Documents/Riccard_Data/230317/phantom_32_chi_ncg_app.nii.gz', chi_res)
-
+# todo: save is not the main problem, rest also has a bug somewhere
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
     print('Time elapsed: {c} seconds.'.format(c=time_elapsed))
 
 #todo: solve reshape chi thing for wrong shape of stuff
 # todo: make it work at all
+
+
+#chi_res = chi_star(f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'), chi=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
