@@ -140,7 +140,7 @@ def chi_star(
     minimization = scipy.optimize.minimize(
         fun=chi_star_func,method='TNC',x0=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'),
         bounds=[(l, u) for l, u in zip(lower_bound, upper_bound)],
-        options=dict(maxiter=10, disp=100))
+        options=dict(maxiter=1000, disp=1000))
 
     # print('Your results are: \n '+str(minimization))  # debug
 
@@ -156,8 +156,19 @@ if __name__ == '__main__':
         f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
 
     # saving the results here:
-    save('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs_TNC.nii.gz',chi_arr)
+    save('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs_TNC_long.nii.gz',chi_arr)
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
     print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
+
+
+# result for 10 inteations:
+#  NIT   NF   F                       GTG
+ #   0    1  6.250653576944698E+02   3.09316951E+02
+#tnc: fscale = 0.000284294
+ #   1    4  2.541509163613052E+02   2.67052993E+01
+  #  2    7  1.810043638553843E+02   9.40536287E+00
+   # 2   10  1.810043638553843E+02   9.40536287E+00
+#tnc: Maximum number of function evaluations reached
+#Time elapsed: 3:23:44.357509 seconds!
