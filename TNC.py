@@ -1,4 +1,7 @@
+# similar to pretty_minimize: uses pmu.gradient instead and method TNC
+
 import os
+
 import datetime
 import numpy as np
 import scipy
@@ -127,7 +130,7 @@ def chi_star(
         chi = chi.reshape(shape)
         result = 0.5 * (np.linalg.norm(
             W * (f - np.fft.ifftn(d * np.fft.fftn(chi)))) ** 2 +
-                    lambda_ * np.sum(abs((M_G) * (np.gradient(chi)))))
+                    lambda_ * np.sum(abs((M_G) * (pmu.gradient(arr=chi)))))
         return result
 
     lower_bound = list(ones.ravel() * -100)
