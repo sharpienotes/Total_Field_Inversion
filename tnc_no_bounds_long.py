@@ -138,7 +138,7 @@ def chi_star(
     minimization = scipy.optimize.minimize(
         fun=chi_star_func,method='TNC',x0=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'),
         bounds=None,
-        options=dict(maxiter=50, disp=50))
+        options=dict(maxiter=500, disp=500))
 
     # print('Your results are: \n '+str(minimization))  # debug
 
@@ -151,11 +151,31 @@ def chi_star(
 if __name__ == '__main__':
     begin_time = datetime.datetime.now()
     chi_arr = chi_star(
-        f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz'))
+        f=load('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs.nii.gz') * 100)
 
     # saving the results here:
-    save('/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs_TNC_one_iter.nii.gz',chi_arr)
+    i = 0
+    template = '/home/raid3/vonhof/Documents/Riccardo_Data/230317/phantom_32_phs_TNC_nobound_{i}.nii.gz'
+    filepath = template.format_map(locals())
+    while os.path.isfile(filepath):
+        i += 1
+        filepath = template.format_map(locals())
+    save(filepath ,chi_arr)
 
     end_time = datetime.datetime.now()
     time_elapsed = end_time - begin_time
     print('Time elapsed: {c} seconds!'.format(c=time_elapsed))
+
+    # results for:
+    #options=dict(maxiter=500, disp=500))
+    # NIT   NF   F                       GTG
+#     0    1  6.250653576944698E+02   3.09316951E+02
+# tnc: fscale = 0.045968
+# tnc: stepmx = 1000
+#     1    5  4.401179716665604E+02   1.66555222E+02
+#     2   14  2.333503445130736E+02   2.08673438E+01
+#     3   20  2.314651422641286E+02   1.84598353E+01
+#     4   26  2.071453779162987E+02   1.81406194E+01
+#     4   50  2.071453779162987E+02   1.81406194E+01
+# tnc: Maximum number of function evaluations reached
+# Time elapsed: 15:11:06.933591 seconds!er=50, disp=50))
